@@ -32,6 +32,9 @@ class FakturResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Faktur';
+
+
     public static function form(Form $form): Form
     {
         return $form
@@ -63,9 +66,9 @@ class FakturResource extends Resource
                         }
                     }),
                 TextInput::make('kode_customer')
-                    ->columnSpan(2)
-                // ->disabled()
-                ,
+                    ->disabled()
+                    ->dehydrated()
+                    ->columnSpan(2),
                 Repeater::make('details')
                     ->relationship()
                     ->schema([
@@ -81,75 +84,70 @@ class FakturResource extends Resource
                                     $set('harga', 0);
                                 }
                             })
-                            ->relationship('barang', 'nama_barang')
-                            ->columnSpan([
+                            ->relationship('barang', 'nama_barang')->columnSpan([
                                 'default' => 2,
                                 'md' => 1,
                                 'lg' => 1,
-                                'xl' => 1,
+                                'xl' => 2,
                             ]),
                         TextInput::make('nama_barang')
-                            // ->disabled()
-                            ->label('Nama Barang')
-                            ->columnSpan([
+                            ->disabled()
+                            ->dehydrated()
+                            ->label('Nama Barang')->columnSpan([
                                 'default' => 2,
                                 'md' => 1,
                                 'lg' => 1,
                                 'xl' => 1,
                             ]),
                         TextInput::make('harga')
-                            // ->disabled()
+                            ->disabled()
+                            ->dehydrated()
                             ->prefix('Rp ')
-                            ->numeric()
                             ->default(0)
-                            ->label('Harga')->columnSpan([
+                            ->label('Harga')
+                            ->columnSpan([
                                 'default' => 2,
                                 'md' => 1,
                                 'lg' => 1,
                                 'xl' => 1,
                             ]),
                         TextInput::make('qty')
-                            ->columnSpan([
-                                'default' => 2,
-                                'md' => 1,
-                                'lg' => 1,
-                                'xl' => 1,
-                            ])
                             ->reactive()
                             ->afterStateUpdated(function (callable $set, $state, $get) {
                                 $tampungharga = $get('harga');
                                 $set('hasil_qty', intval($state * $tampungharga));
-                            }),
-                        TextInput::make('hasil_qty')
-                            ->numeric()
-                            // ->disabled()
-                            ->default(0)
-                            ->label('Hasil Qty')
+                            })
                             ->columnSpan([
                                 'default' => 2,
                                 'md' => 1,
                                 'lg' => 1,
                                 'xl' => 1,
                             ]),
-                        TextInput::make('diskon')
-                            ->numeric()
+                        TextInput::make('hasil_qty')
+                            ->disabled()
+                            ->dehydrated()
                             ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->label('Diskon (%)')
-                            ->columnSpan([
+                            ->label('Hasil Qty')->columnSpan([
                                 'default' => 2,
                                 'md' => 1,
                                 'lg' => 1,
                                 'xl' => 1,
-                            ])
+                            ]),
+                        TextInput::make('diskon')
+                            ->label('Diskon (%)')
                             ->reactive()
                             ->afterStateUpdated(function (Set $set, $state, Get $get) {
                                 $hasil_qty = $get('hasil_qty');
                                 $diskon = $hasil_qty * ($state / 100);
                                 $hasil = $hasil_qty - $diskon;
                                 $set('subtotal', intval($hasil));
-                            }),
+                            })
+                            ->columnSpan([
+                                'default' => 2,
+                                'md' => 1,
+                                'lg' => 1,
+                                'xl' => 1,
+                            ]),
                         TextInput::make('subtotal')
                             ->numeric()
                             ->default(0)
@@ -167,9 +165,9 @@ class FakturResource extends Resource
                     ->columnSpan(2),
                 TextInput::make('total')
                     ->columnSpan([
-                        'default' => 2,
-                        'md' => 1,
-                        'lg' => 1,
+                        'default' => 1,
+                        'md' => 2,
+                        'lg' => 2,
                         'xl' => 1,
                     ])
                     ->placeholder(function (Set $set, Get $get) {
@@ -182,9 +180,9 @@ class FakturResource extends Resource
                     }),
                 TextInput::make('nominal_charge')
                     ->columnSpan([
-                        'default' => 2,
-                        'md' => 1,
-                        'lg' => 1,
+                        'default' => 1,
+                        'md' => 2,
+                        'lg' => 2,
                         'xl' => 1,
                     ])
                     ->reactive()
@@ -197,8 +195,12 @@ class FakturResource extends Resource
                         $set('charge', $charge);
                     }),
                 TextInput::make('charge')
+                    ->disabled()
+                    ->dehydrated()
                     ->columnSpan(2),
                 TextInput::make('total_final')
+                    ->disabled()
+                    ->dehydrated()
                     ->columnSpan(2),
             ]);
     }
@@ -213,10 +215,12 @@ class FakturResource extends Resource
                 TextColumn::make('customer.nama_customer')
                     ->label('Customer'),
                 TextColumn::make('ket_faktur'),
-                TextColumn::make('total'),
+                TextColumn::make('total')
+                    ->formatStateUsing(fn(faktur $record): string => 'Rp' . number_format($record->total, 0, '.', '.')),
                 TextColumn::make('nominal_charge'),
                 TextColumn::make('charge'),
-                TextColumn::make('total_final'),
+                TextColumn::make('total_final')
+                    ->formatStateUsing(fn(faktur $record): string => 'Rp' . number_format($record->total_final, 0, '.', '.')),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
