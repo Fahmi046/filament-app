@@ -40,8 +40,17 @@ class FakturResource extends Resource
         return $form
             ->schema([
                 TextInput::make('kode_faktur')
+                    ->autofocus()
+                    ->id('kode_faktur')
+                    ->extraInputAttributes([
+                        'x-on:keydown.enter' => '$event.preventDefault(); document.getElementById(\'tanggal_faktur\').focus();',
+                    ])
                     ->columnSpan(2),
                 DatePicker::make('tanggal_faktur')
+                    ->id('tanggal_faktur')
+                    ->extraInputAttributes([
+                        'x-on:keydown.enter' => '$event.preventDefault(); document.getElementById(\'customer_id\').focus();',
+                    ])
                     ->columnSpan([
                         'default' => 2,
                         'md' => 1,
@@ -49,6 +58,10 @@ class FakturResource extends Resource
                         'xl' => 1,
                     ]),
                 Select::make('customer_id')
+                    ->id('customer_id')
+                    ->extraInputAttributes([
+                        'x-on:keydown.enter' => '$event.preventDefault(); document.getElementById(\'barang_id\').focus();',
+                    ])
                     ->reactive()
                     ->relationship('customer', 'nama_customer')
                     ->columnSpan([
@@ -72,7 +85,11 @@ class FakturResource extends Resource
                 Repeater::make('details')
                     ->relationship()
                     ->schema([
-                        select::make('barang_id')
+                        Select::make('barang_id')
+                            ->id('barang_id')
+                            ->extraInputAttributes([
+                                'x-on:keydown.enter' => '$event.preventDefault(); document.getElementById(\'qty\').focus();',
+                            ])
                             ->reactive()
                             ->afterStateUpdated(function (callable $set, $state) {
                                 $barang = \App\Models\Barang::find($state);
@@ -112,6 +129,10 @@ class FakturResource extends Resource
                                 'xl' => 1,
                             ]),
                         TextInput::make('qty')
+                            ->id('qty')
+                            ->extraInputAttributes([
+                                'x-on:keydown.enter' => '$event.preventDefault(); document.getElementById(\'diskon\').focus();',
+                            ])
                             ->reactive()
                             ->afterStateUpdated(function (callable $set, $state, $get) {
                                 $tampungharga = $get('harga');
@@ -134,14 +155,13 @@ class FakturResource extends Resource
                                 'xl' => 1,
                             ]),
                         TextInput::make('diskon')
+                            ->id('diskon')
+                            ->extraInputAttributes([
+                                'x-on:keydown.enter' => '$event.preventDefault();
+                                $nextTick(() => $el.closest(\'li\').nextElementSibling.querySelector(\'button[title="Add item"]\')?.focus());',
+                            ])
                             ->label('Diskon (%)')
                             ->reactive()
-                            ->afterStateUpdated(function (Set $set, $state, Get $get) {
-                                $hasil_qty = $get('hasil_qty');
-                                $diskon = $hasil_qty * ($state / 100);
-                                $hasil = $hasil_qty - $diskon;
-                                $set('subtotal', intval($hasil));
-                            })
                             ->columnSpan([
                                 'default' => 2,
                                 'md' => 1,
@@ -149,6 +169,7 @@ class FakturResource extends Resource
                                 'xl' => 1,
                             ]),
                         TextInput::make('subtotal')
+                            ->id('subtotal')
                             ->numeric()
                             ->default(0)
                             ->label('Sub Total')
@@ -162,8 +183,16 @@ class FakturResource extends Resource
                     ->live()
                     ->columnSpan(2),
                 Textarea::make('ket_faktur')
+                    ->id('ket_faktur')
+                    ->extraInputAttributes([
+                        'x-on:keydown.enter' => '$event.preventDefault(); document.getElementById(\'total\').focus();',
+                    ])
                     ->columnSpan(2),
                 TextInput::make('total')
+                    ->id('total')
+                    ->extraInputAttributes([
+                        'x-on:keydown.enter' => '$event.preventDefault(); document.getElementById(\'nominal_charge\').focus();',
+                    ])
                     ->columnSpan([
                         'default' => 1,
                         'md' => 2,
@@ -179,6 +208,10 @@ class FakturResource extends Resource
                         }
                     }),
                 TextInput::make('nominal_charge')
+                    ->id('nominal_charge')
+                    ->extraInputAttributes([
+                        'x-on:keydown.enter' => '$event.preventDefault(); document.getElementById(\'charge\').focus();',
+                    ])
                     ->columnSpan([
                         'default' => 1,
                         'md' => 2,
@@ -195,10 +228,12 @@ class FakturResource extends Resource
                         $set('charge', $charge);
                     }),
                 TextInput::make('charge')
+                    ->id('charge')
                     ->disabled()
                     ->dehydrated()
                     ->columnSpan(2),
                 TextInput::make('total_final')
+                    ->id('total_final')
                     ->disabled()
                     ->dehydrated()
                     ->columnSpan(2),
